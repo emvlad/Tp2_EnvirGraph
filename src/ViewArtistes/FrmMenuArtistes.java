@@ -38,9 +38,6 @@ public class FrmMenuArtistes extends JFrame{
 		pnlBkGrnd.add(lblBkGrnd);
 		this.add(pnlBkGrnd);
 
-
-
-
 		setLocationRelativeTo (null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

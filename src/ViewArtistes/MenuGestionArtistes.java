@@ -1,9 +1,12 @@
 package ViewArtistes;
 
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -20,12 +23,13 @@ public class MenuGestionArtistes extends JMenuBar{
 	 */
 	private static final long serialVersionUID = 1L;
 	JMenu lejMenu,  Aide;
-	JMenuItem itemArtistes, itemAlbums,itemQuit;
+	JMenuItem itemArtistes, itemAlbums,itemQuit,itemAide;
 
 
 	public MenuGestionArtistes() {
 
 		super();
+		OptListener menuOpt = new OptListener();
 		lejMenu = new JMenu("Menu");
 		lejMenu.setMnemonic(KeyEvent.VK_M);
 	
@@ -45,18 +49,22 @@ public class MenuGestionArtistes extends JMenuBar{
 		Aide = new JMenu("?");
 		Aide.setMnemonic(KeyEvent.VK_H);
 		
-		OptListener menuOpt = new OptListener();
+		itemAide = new JMenuItem("Aide en ligne");
+		itemAide.setActionCommand("Aide en ligne");
+		
 		itemArtistes.addActionListener(menuOpt);
 		itemAlbums.addActionListener(menuOpt);
-		itemQuit.addActionListener(menuOpt);
+		itemQuit.addActionListener(menuOpt);		
 		
+		itemAide.addActionListener(menuOpt);
 		
 		lejMenu.add(itemArtistes);
 		lejMenu.add(itemAlbums);
 		lejMenu.addSeparator();
 		lejMenu.add(itemQuit);
 		
-
+		Aide.add(itemAide);
+	
 		this.add(lejMenu);
 		this.add(Aide);
 	}
@@ -65,6 +73,8 @@ public class MenuGestionArtistes extends JMenuBar{
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			
+			System.out.println(e.getActionCommand());
 			if (e.getSource()== itemArtistes) {
 				
 				exeFrmArtist.main(null);
@@ -73,18 +83,23 @@ public class MenuGestionArtistes extends JMenuBar{
 			else if (e.getSource()== itemAlbums) {
 				
 				JOptionPane.showMessageDialog(null, "Exo-Groupe");
-				FrmAlbums.main(null);
+				
 			}
-			
-			else if (e.getSource()== itemQuit)
-				
+			else if (e.getSource()== itemQuit) {
 				System.exit(0);
-			
-			else if (e.getSource()== Aide)
 				
-				JOptionPane.showMessageDialog(null, "Coming soon");
-				FrmAid.main(null);
+			}			
+			else if (e.getActionCommand()=="Aide en ligne") {
 			
+				File leFichier = new File("src/definitions.chm");
+				try {
+					Desktop.getDesktop().open(leFichier);
+				} catch (IOException eio) {
+					
+					eio.printStackTrace();
+				}
+			}
+				
 		}
 	}
 }	

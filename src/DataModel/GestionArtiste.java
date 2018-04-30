@@ -1,22 +1,23 @@
 package DataModel;
 
 import java.sql.Connection;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+
 import javax.swing.JOptionPane;
 
-
-import LonginTp2Chris.ConnectionMySQL;
-import ViewArtistes.Artistes;
+import MainLoginTp2Chris.ConnectionMySQL;
 
 public class GestionArtiste {
 
 	private Connection connection = ConnectionMySQL.getLaConnection();
 
 	private ArrayList<Artistes> lstArtists;
+//	private ArrayList<Albums> lstAlbums;
 
 	public GestionArtiste() {
 
@@ -24,7 +25,7 @@ public class GestionArtiste {
 
 	}
 
-	private ArrayList<Artistes> obtenirListArtistes() {
+	public ArrayList<Artistes> obtenirListArtistes() {
 
 
 		lstArtists = new ArrayList<Artistes>();
@@ -35,71 +36,74 @@ public class GestionArtiste {
 				ResultSet paketResultat= statement.executeQuery(requete) ){
 
 			while(paketResultat.next()) {
-				int numero = paketResultat.getInt("numero");
+				int numero = paketResultat.getInt("idArtiste");
 				String nom = paketResultat.getString("nom");
 				boolean membre = paketResultat.getBoolean("membre");
-		
-				lstArtists.add(new Artistes(numero,nom,membre) );
+				int photo = paketResultat.getInt("photo");
+				
+				lstArtists.add(new Artistes(numero,nom,membre,photo) );
 
 			}
 
 		}
 		catch (SQLException sqle) {
-			JOptionPane.showMessageDialog(null, "Problème rencontr\u00E8 : " 
+			JOptionPane.showMessageDialog(null, "ERROR : " 
 					+ sqle.getMessage(),"Résultat" , JOptionPane.ERROR_MESSAGE);			
 		}
 
 		return lstArtists;
 	}
 
-
-
 	public 	boolean ajouterArist (Artistes artiste) {
 
 		int intMembre =0;
-		boolean boolAjout =false;
-		
-		
-		if(artiste.isMembre()) {
-			intMembre = 1;
-
-			String requete = "INSERT INTO artiste(numero, nom, membre) VALUES ('" 
-					+ artiste.getNumero() +   "','"
-					+ artiste.getNom() +   "','"
-					+ intMembre +   "' " + ")";
+		boolean boolAjout = false;
+			
+		if(artiste.getNumero() >0  && artiste.isMembre() ) {
+			intMembre = 1;}
+		else if (artiste.getNumero() >0  && !artiste.isMembre() ) {
+			intMembre = 0;
+			String requete = "INSERT INTO artiste(idArtiste, nom, membre,photo) VALUES (" 
+					+ artiste.getNumero() +   ",'"
+					+ artiste.getNom() +   "',"
+					+ intMembre 
+					+ artiste.getPhoto()+ ")";
 
 			try {
 				Statement statement = connection.createStatement();
 				statement.executeUpdate(requete);
-
+				boolAjout = true;
 			} catch(SQLException sqle) {
 
-				JOptionPane.showMessageDialog(null, "Probl\\u00E8me rencontr\\u00E9 lors de l'enregistrement\r\n" + 
+				JOptionPane.showMessageDialog(null, "Erreur d'enregistrement\r\n" + 
 						" de l'artiste: " + sqle.getMessage(),"Résultat", JOptionPane.ERROR_MESSAGE);
 
 			}
 		}
+		
+		
 		return boolAjout;
 
 	}
 
 
-	public 	boolean supprimerArist (Artistes artiste) {
+	public 	boolean supprimerArtist (Artistes artiste) {
 		
 		boolean boolDel = false;
 			
-		if(artiste.getNumero() >0) {
+		if(artiste.getNumero() > 0) {
 	
 		String requete = "DELETE from artiste where numero = " + artiste.getNumero() ;
 
 		try {
 			Statement statement = connection.createStatement();
 			statement.executeUpdate(requete);
+			boolDel = true;
 
 		} catch(SQLException sqle) {
 
-			JOptionPane.showMessageDialog(null, "Probl\\u00E8me rencontr\\u00E9 lors de la suppression "
-					+ " de l'artiste: " + sqle.getMessage(),"Résultat", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "ERRORS: suppression "
+					 + sqle.getMessage(),"Résultat", JOptionPane.ERROR_MESSAGE);
 
 		}
 		
@@ -114,21 +118,24 @@ public class GestionArtiste {
 		int intMembre =0;
 		boolean boolUpDate = false;
 
-		if(artiste.isMembre()) {
-			intMembre = 1;
-
-			String requete = "UPDATE artiste SET ('" 
-					+ artiste.getNumero() +   "','"
-					+ artiste.getNom() +   "','"
-					+ intMembre +   "' " + ")";
+		if(artiste.getNumero() >0  && artiste.isMembre() ) {
+			intMembre = 1;}
+		else if (artiste.getNumero() >0  && !artiste.isMembre() ) {
+			intMembre = 0;
+			
+			String requete = "UPDATE artiste SET ("
+					+ artiste.getNumero() +   ",'"
+					+ artiste.getNom() +   "',"
+					+ intMembre + ")";
 
 			try {
 				Statement statement = connection.createStatement();
 				statement.executeUpdate(requete);
+				boolUpDate = true;
 
 			} catch(SQLException sqle) {
 
-				JOptionPane.showMessageDialog(null, "Probl\\u00E8me rencontr\\u00E9 lors de la mise à jour \r\n" + 
+				JOptionPane.showMessageDialog(null, "Problme rencontr\u00E9 lors de la mise à jour \r\n" + 
 						" de l'artiste: " + sqle.getMessage(),"Résultat", JOptionPane.ERROR_MESSAGE);
 
 			}
@@ -136,6 +143,12 @@ public class GestionArtiste {
 		return boolUpDate;
 
 	}
+	
+	
+
+	
+
+
 
 }
 

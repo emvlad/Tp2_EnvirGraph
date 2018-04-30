@@ -1,8 +1,6 @@
 package ViewArtistes;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -11,12 +9,17 @@ import javax.swing.event.ListSelectionListener;
 
 import ControlArtist.GererFrmAffichArtiste;
 
-
+import DataModel.Artistes;
+import DataModel.GestionAlbums;
+import DataModel.GestionArtiste;
+import DataModel.ModelArtiste;
+import DataModel.NumGras;
 
 import javax.swing.JButton;
 import java.awt.GridLayout;
-
 import javax.swing.JLabel;
+
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
@@ -27,53 +30,51 @@ import javax.swing.JCheckBox;
 import java.awt.Font;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import java.awt.Toolkit;
+import java.sql.ResultSet;
 import java.util.ArrayList;
+
+//import DataModel.Albums;
+//import DataModel.Albums;
+//import javax.swing.JList;
 
 public class FrmAffichArtisteBldr extends JFrame {
 
 	/**
-	 * 
+	 * attributs
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextField textNumero;
-	private JTextField textNom;
+	private JTextField textNom = new JTextField();
 	private JTable table;
-	JPanel panelBtnGestion;
+
+
+	private JPanel panelBtnGestion;
 
 	//self-parent
-	FrmAffichArtisteBldr parent = this;
-	
-
+	private FrmAffichArtisteBldr parent = this;
 
 	//model
 	private ModelArtiste modelArtist = new ModelArtiste(premierArtiste());
 	public JTable tabjArtistes = new JTable(modelArtist);
 
+	//space form unavailable 
+	//	private DefaultListModel<String> modelAlbums = premierArtistAlbums();
+	//	private JList<String> jListeAlbums = new JList<>(modelAlbums);
+	private JScrollPane scroListe = new JScrollPane();//(jListeAlbums);
 
 
-	String [] nomBtnGestion = new String [] {"Ajouter","Modifier",
-			"Suprimer","Rechercher","Quitter" };
+	private String [] nomBtnGestion = new String [] {"Ajouter","Modifier",
+			"Supprimer","Rechercher","Quitter" };
 
 	private JButton[] btnGestion = new JButton[nomBtnGestion.length];
+	private GestionArtiste gererArtiste;
+	private GestionAlbums gererAlbum;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					FrmAffichArtisteBldr frame = new FrmAffichArtisteBldr();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	private JButton btnrecherche = new JButton("Go") ;
 
 	/**
 	 * Create the frame.
@@ -83,7 +84,9 @@ public class FrmAffichArtisteBldr extends JFrame {
 		setResizable(false);
 		setTitle("Gestion des artistes");
 		setIconImage(Toolkit.getDefaultToolkit().getImage(FrmAffichArtisteBldr.class.getResource("/icons/dvd.png")));
+
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
 		setBounds(100, 100, 585, 382);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -91,9 +94,10 @@ public class FrmAffichArtisteBldr extends JFrame {
 		setContentPane(contentPane);
 		setLocationRelativeTo (null);
 
-
+		//listeners
 		GererFrmAffichArtiste gereArtist= new GererFrmAffichArtiste(tabjArtistes, modelArtist,
-				parent, nomBtnGestion);
+				parent, nomBtnGestion, textNom);
+
 
 		panelBtnGestion = new JPanel();
 
@@ -108,9 +112,7 @@ public class FrmAffichArtisteBldr extends JFrame {
 
 			panelBtnGestion.add(btnGestion[i]);
 
-
 		}
-
 
 		contentPane.add(panelBtnGestion, BorderLayout.WEST);
 		panelBtnGestion.setLayout(new GridLayout(5, 1, 5, 50));
@@ -147,11 +149,16 @@ public class FrmAffichArtisteBldr extends JFrame {
 		gbc_textNumero.gridx = 6;
 		gbc_textNumero.gridy = 1;
 		panel_FormHaut.add(textNumero, gbc_textNumero);
+
+		//field not editable
 		textNumero.setColumns(10);
 		textNumero.setEditable(false);
 
 		JLabel lblPhotoArtiste = new JLabel("");
+		//busy space
 		lblPhotoArtiste.setIcon(new ImageIcon(FrmAffichArtisteBldr.class.getResource("/icons/artistPicts/1.jpg")));
+
+
 		lblPhotoArtiste.setToolTipText("Photo Artiste");
 		GridBagConstraints gbc_lblPhotoArtiste = new GridBagConstraints();
 		gbc_lblPhotoArtiste.fill = GridBagConstraints.HORIZONTAL;
@@ -161,6 +168,9 @@ public class FrmAffichArtisteBldr extends JFrame {
 		gbc_lblPhotoArtiste.gridx = 11;
 		gbc_lblPhotoArtiste.gridy = 1;
 		panel_FormHaut.add(lblPhotoArtiste, gbc_lblPhotoArtiste);
+
+		scroListe.setToolTipText("Liste des albums de l'artiste");
+
 
 		JLabel lblNom = new JLabel("Nom");
 		lblNom.setFont(new Font("Tahoma", Font.PLAIN, 14));
@@ -172,7 +182,7 @@ public class FrmAffichArtisteBldr extends JFrame {
 		gbc_lblNom.gridy = 2;
 		panel_FormHaut.add(lblNom, gbc_lblNom);
 
-		textNom = new JTextField();
+
 		GridBagConstraints gbc_textField = new GridBagConstraints();
 		gbc_textField.anchor = GridBagConstraints.WEST;
 		gbc_textField.gridwidth = 6;
@@ -180,7 +190,9 @@ public class FrmAffichArtisteBldr extends JFrame {
 		gbc_textField.gridx = 6;
 		gbc_textField.gridy = 2;
 		panel_FormHaut.add(textNom, gbc_textField);
-		textNom.setColumns(10);
+
+		//field not editable
+		textNom.setColumns(16);
 		textNom.setEditable(false);
 
 
@@ -192,41 +204,45 @@ public class FrmAffichArtisteBldr extends JFrame {
 		gbc_lblMembre.gridx = 3;
 		gbc_lblMembre.gridy = 3;
 		panel_FormHaut.add(lblMembre, gbc_lblMembre);
+		
 
 		JCheckBox chckbxMembre = new JCheckBox("");
 		chckbxMembre.setEnabled(false);
-		
+
 		GridBagConstraints gbc_chckbxMembre = new GridBagConstraints();
 		gbc_chckbxMembre.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxMembre.anchor = GridBagConstraints.WEST;
 		gbc_chckbxMembre.gridx = 6;
 		gbc_chckbxMembre.gridy = 3;
+		
 		panel_FormHaut.add(chckbxMembre, gbc_chckbxMembre);
 
-		JLabel lblphotoAlbum = new JLabel("");
-		lblphotoAlbum.setIcon(new ImageIcon(FrmAffichArtisteBldr.class.getResource("/icons/artistPicts/2.jpg")));
-		lblphotoAlbum.setToolTipText("Photo Album");
-		GridBagConstraints gbc_lblphotoAlbum = new GridBagConstraints();
-		gbc_lblphotoAlbum.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblphotoAlbum.gridheight = 4;
-		gbc_lblphotoAlbum.gridwidth = 3;
-		gbc_lblphotoAlbum.insets = new Insets(0, 0, 0, 5);
-		gbc_lblphotoAlbum.gridx = 11;
-		gbc_lblphotoAlbum.gridy = 4;
-		panel_FormHaut.add(lblphotoAlbum, gbc_lblphotoAlbum);
 
+		GridBagConstraints gbc_btnSearch = new GridBagConstraints();
+		gbc_btnSearch.anchor = GridBagConstraints.WEST;
+		gbc_btnSearch.gridwidth = 5;
+		gbc_btnSearch.insets = new Insets(0, 0, 3, 3);
+		gbc_btnSearch.gridx = 7;
+		gbc_btnSearch.gridy = 3;
+		
+		panel_FormHaut.add(btnrecherche, gbc_btnSearch);
 
 		tabjArtistes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tabjArtistes.getColumnModel().getColumn(2).setCellRenderer(new IconMembActif());
 		tabjArtistes.getColumnModel().getColumn(1).setCellRenderer(new NumGras());
 
+
+
 		JScrollPane scrollPane = new JScrollPane(tabjArtistes);
+		
 
 		panel.add(scrollPane, BorderLayout.CENTER);
+		panel.add(scroListe,BorderLayout.EAST);
 
 		scrollPane.setColumnHeaderView(table);
+
 		
-		
+
 		
 		tabjArtistes.getSelectionModel().addListSelectionListener(new
 				ListSelectionListener(){
@@ -235,38 +251,63 @@ public class FrmAffichArtisteBldr extends JFrame {
 			public void valueChanged(ListSelectionEvent e) {
 
 				if (!e.getValueIsAdjusting()) {
-					
+
 					if(tabjArtistes.getSelectedRow()>= 0) {
-						
+
 						int numLigne;
 						numLigne = tabjArtistes.getSelectedRow();
 
 						Artistes artiste= modelArtist.getElement(numLigne);
-						
+
+						try {
+
+							if(artiste.getNumero() == artiste.getPhoto() ) {
+
+								lblPhotoArtiste.setIcon(new ImageIcon(FrmAffichArtisteBldr.class.getResource("/icons/artistPicts/" + artiste.getNumero() + ".jpg")));
+
+								textNumero.setText(Integer.toString(artiste.getNumero()));
+								textNom.setText(artiste.getNom());
+
+								chckbxMembre.isSelected();							
+
+							}
+							else if(artiste.isMembre()) {
+								chckbxMembre.setSelected(true);
+							} else if (!artiste.isMembre()){
+								chckbxMembre.setSelected(false);
+							}else {
+								JOptionPane.showMessageDialog(null, "Numéro photo incorrect");
+							}						
+
+
+						} catch (Exception e2) {
+
+							JOptionPane.showMessageDialog(null, "photo introuvable");
+
+						}
+
 						//méthode ajoutée dans le modèle de table
 
 						textNumero.setText(Integer.toString(artiste.getNumero()));
 						textNom.setText(artiste.getNom());
 						chckbxMembre.isSelected();
-						
-						
+
+
 						if(artiste.isMembre()) {
 							chckbxMembre.setSelected(true);
 						} else {
 							chckbxMembre.setSelected(false);
 						}
-						
-						
-						
+
 					}
 
 				}
 			};
 
 		});
-		
-				
-		
+
+
+
 	}
 
 	public ModelArtiste getModelArtiste () {
@@ -274,28 +315,40 @@ public class FrmAffichArtisteBldr extends JFrame {
 
 	}
 
-	/**
-	 * méthode pour ajouter un nouveau artiste 
-	 * suivant le constructeur complet de la classe artistes
-	 * 
-	 * @return le package de la liste des artistes
-	 */
 	private ArrayList<Artistes> premierArtiste(){
 
 		ArrayList<Artistes> listArtistes= new ArrayList<Artistes>();
+		gererArtiste = new GestionArtiste();
+		listArtistes = gererArtiste.obtenirListArtistes();
 
-		listArtistes.add(new  Artistes(1, "Jennifer Lopez", true));
-		listArtistes.add(new  Artistes(2, "Michael Jackson", false));
-		listArtistes.add(new  Artistes(4, "Selena Gomez",  true ));
-
-		//package liste musiciens
+		//package liste artistes
 		return listArtistes;
 
 	}
-	
 
-	
-	
+
+	//affiche Albums/ARTISTE
+	private DefaultListModel<String> premierArtistAlbums(){
+
+		Artistes artiste = new Artistes(tabjArtistes.getSelectedRow());
+
+		DefaultListModel<String> modelAlbums = new DefaultListModel<>();
+
+		gererAlbum = new GestionAlbums();
+		ResultSet alb;
+
+		alb=gererAlbum.find(artiste.getNom().toString());
+
+		modelAlbums.addElement(alb.toString());
+
+		//package liste albums_artiste
+		return modelAlbums;
+
+	}
+
+
+
+
 
 }
 
